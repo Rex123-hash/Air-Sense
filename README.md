@@ -7,7 +7,7 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.136-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![scikit-learn](https://img.shields.io/badge/scikit--learn-1.9-F7931E?style=for-the-badge&logo=scikitlearn&logoColor=white)](https://scikit-learn.org/)
 
-**[▶ Open the live app](https://airsense-526660427489.asia-south1.run.app)** · **[API docs](https://airsense-526660427489.asia-south1.run.app/docs)**
+**<img src="docs/icons/play.svg" width="16" height="16"> [Open the live app](https://airsense-526660427489.asia-south1.run.app)** &nbsp;·&nbsp; **[API docs](https://airsense-526660427489.asia-south1.run.app/docs)**
 
 *Built by **Amaan Khan** and **Srishti Rathi** · MAIT, Delhi · 1M1B Portfolio Submission*
 
@@ -24,7 +24,7 @@ location, and attaches a concrete action you can take about it.
 
 ---
 
-## Table of contents
+## <img src="docs/icons/toc.svg" width="20" height="20"> Table of contents
 
 - [The insight](#the-insight)
 - [What it does](#what-it-does)
@@ -43,7 +43,7 @@ location, and attaches a concrete action you can take about it.
 
 ---
 
-## The insight
+## <img src="docs/icons/insight.svg" width="20" height="20"> The insight
 
 Analysis of 2 000 hourly readings found NOx averaging **175.1 ppb in the 6–9 PM
 window** against **53.3 ppb overnight (3–6 AM)** — a **3.3× swing** that tracks
@@ -58,20 +58,20 @@ drift away from the data behind it.
 
 ---
 
-## What it does
+## <img src="docs/icons/features.svg" width="20" height="20"> What it does
 
-| | |
-|---|---|
-| 📍 **Reads now** | Current NOx with a risk band and the action to take right now |
-| 🔮 **Forecasts ahead** | 1–6 hours out, using a gradient-boosting model on lagged features |
-| 🚨 **Warns early** | *"Peak predicted in N hours — act now"* when an upcoming hour turns High or Severe |
-| 📊 **Proves itself** | Backtests every prediction against what actually happened, in the UI |
-| 🔁 **Replays honestly** | Position "now" anywhere in the dataset; forecasts recompute from that hour only |
-| 📥 **Exports** | Download any forecast as CSV, with provenance headers attached |
+| | | |
+|:--:|---|---|
+| <img src="docs/icons/pin.svg" width="19" height="19"> | **Reads now** | Current NOx with a risk band and the action to take right now |
+| <img src="docs/icons/forecast.svg" width="19" height="19"> | **Forecasts ahead** | 1–6 hours out, using a gradient-boosting model on lagged features |
+| <img src="docs/icons/alert.svg" width="19" height="19"> | **Warns early** | *"Peak predicted in N hours — act now"* when an upcoming hour turns High or Severe |
+| <img src="docs/icons/chart.svg" width="19" height="19"> | **Proves itself** | Backtests every prediction against what actually happened, in the UI |
+| <img src="docs/icons/replay.svg" width="19" height="19"> | **Replays honestly** | Position "now" anywhere in the dataset; forecasts recompute from that hour only |
+| <img src="docs/icons/download.svg" width="19" height="19"> | **Exports** | Download any forecast as CSV, with provenance headers attached |
 
 ---
 
-## The six screens
+## <img src="docs/icons/screens.svg" width="20" height="20"> The six screens
 
 | Screen | What it shows |
 |---|---|
@@ -91,15 +91,15 @@ sender was looking at:
 
 ---
 
-## Validation — the differentiator
+## <img src="docs/icons/validation.svg" width="20" height="20"> Validation — the differentiator
 
 Held-out **chronological** test set. A shuffled split would leak the future into
 training and produce a fraudulently good score.
 
 | Metric | AirSense | Persistence baseline | |
 |---|---:|---:|---|
-| **MAE** | **25.92 ppb** | 34.94 ppb | 🟢 **−25.8 %** |
-| **RMSE** | **37.02 ppb** | 51.34 ppb | 🟢 −27.9 % |
+| **MAE** | **25.92 ppb** | 34.94 ppb | <img src="docs/icons/check.svg" width="15" height="15"> **−25.8 %** |
+| **RMSE** | **37.02 ppb** | 51.34 ppb | <img src="docs/icons/check.svg" width="15" height="15"> −27.9 % |
 | **R²** | **0.801** | — | |
 
 **Backtest across all 396 test hours** (`GET /api/backtest`, rendered as a chart
@@ -112,7 +112,7 @@ in the app):
 | Hours predicted within 50 ppb | **86.4 %** |
 | Worst single-hour error | 166.3 ppb |
 
-### Early-warning skill — the operational question
+### <img src="docs/icons/alert.svg" width="18" height="18"> Early-warning skill — the operational question
 
 Average error is not what matters to someone deciding whether to move a class
 indoors. What matters is: **when the air actually went bad, did we say so
@@ -142,7 +142,7 @@ cannot beat it, it has not learned anything worth deploying.
 
 ---
 
-## No data leakage
+## <img src="docs/icons/lock.svg" width="20" height="20"> No data leakage
 
 **Every feature must be knowable *before* the hour being predicted.**
 
@@ -166,7 +166,7 @@ The honest answer to *"what did the model know at prediction time?"* is
 
 ---
 
-## Architecture
+## <img src="docs/icons/architecture.svg" width="20" height="20"> Architecture
 
 ```
               UCI hourly CSV  (raw, 7 394 rows)
@@ -205,19 +205,20 @@ airsense/
 │   ├── risk.py              # risk banding + recommended actions
 │   ├── zones.py             # simulated campus zones (flagged)
 │   ├── main.py              # FastAPI routes + static mount + backtest
-│   └── static/              # index.html · app.js · styles.css
+│   └── static/              # index.html · app.js · styles.css · logo.svg
 ├── data/air_quality.csv     # committed
 ├── models/forecaster.pkl    # committed
 ├── models/metrics.json      # committed
 ├── Dockerfile
 ├── requirements.txt         # pinned to the versions that trained the model
 ├── DESIGN.md                # full UI specification
+├── docs/VIDEO_SCRIPT.md     # 60-second demo script
 └── README.md
 ```
 
 ---
 
-## Data and cleaning
+## <img src="docs/icons/data.svg" width="20" height="20"> Data and cleaning
 
 **Source:** UCI Air Quality Data Set — De Vito, S., Massera, E., Piga, M.,
 Martinotto, L., & Di Francia, G. (2008). *On field calibration of an electronic
@@ -251,7 +252,7 @@ A contiguous 2 000-row hourly slice is used (11 Mar – 23 Jun 2004).
 
 ---
 
-## API reference
+## <img src="docs/icons/api.svg" width="20" height="20"> API reference
 
 All endpoints return JSON. Interactive docs at [`/docs`](https://airsense-526660427489.asia-south1.run.app/docs).
 
@@ -278,7 +279,7 @@ curl "https://airsense-526660427489.asia-south1.run.app/api/forecast?as_of=2004-
 
 ---
 
-## Running locally
+## <img src="docs/icons/terminal.svg" width="20" height="20"> Running locally
 
 ```bash
 pip install -r requirements.txt
@@ -299,13 +300,13 @@ train 1580 rows / test 396 rows
 peak insight: evening 175 ppb vs overnight 53 ppb = 3.3x
 ```
 
-`train.py` also fails loudly rather than silently if something looks wrong — it
-asserts the date-column order, asserts the test set starts strictly after the
-training set ends, and warns if R² climbs above 0.90 (a leakage smell).
+`train.py` fails loudly rather than silently if something looks wrong — it asserts
+the date-column order, asserts the test set starts strictly after the training set
+ends, and warns if R² climbs above 0.90 (a leakage smell).
 
 ---
 
-## Deployment
+## <img src="docs/icons/deploy.svg" width="20" height="20"> Deployment
 
 ```bash
 gcloud run deploy airsense --source . --region asia-south1 \
@@ -326,7 +327,7 @@ asserts the artefacts exist at build time rather than failing at deploy time.
 
 ---
 
-## Design decisions
+## <img src="docs/icons/decisions.svg" width="20" height="20"> Design decisions
 
 <details>
 <summary><b>Why gradient boosting and not an LSTM?</b></summary><br>
@@ -366,7 +367,7 @@ point does not change the model or the prediction.
 
 ---
 
-## Limitations and honesty notes
+## <img src="docs/icons/limits.svg" width="20" height="20"> Limitations and honesty notes
 
 Stating known limits precisely is what separates an engineering submission from a
 sales pitch. These are real.
@@ -408,7 +409,7 @@ sales pitch. These are real.
 
 ---
 
-## Roadmap
+## <img src="docs/icons/roadmap.svg" width="20" height="20"> Roadmap
 
 | Phase | Milestone |
 |---|---|
@@ -420,7 +421,7 @@ sales pitch. These are real.
 
 ---
 
-## Credits
+## <img src="docs/icons/credits.svg" width="20" height="20"> Credits
 
 **Team** — Amaan Khan · Srishti Rathi · MAIT, Delhi
 
@@ -437,7 +438,7 @@ understand and can defend every part of the result.
 
 <div align="center">
 
-**[▶ Open the live app](https://airsense-526660427489.asia-south1.run.app)**
+**<img src="docs/icons/play.svg" width="16" height="16"> [Open the live app](https://airsense-526660427489.asia-south1.run.app)**
 
 *AirSense turns air quality from something you react to into something you plan around.*
 
