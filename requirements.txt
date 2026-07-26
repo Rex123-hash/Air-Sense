@@ -1,0 +1,13 @@
+# Pinned to the EXACT versions that trained models/forecaster.pkl.
+#
+# This matters: the pickle holds a fitted scikit-learn estimator. Loading it
+# under a different scikit-learn version produces an InconsistentVersionWarning
+# at best and a broken model at worst. If you re-run train.py on different
+# versions, update these pins to match (train.py records them under
+# "trained_with" in models/metrics.json).
+fastapi==0.136.0
+uvicorn[standard]==0.44.0
+pandas==3.0.2
+numpy==2.4.4
+scikit-learn==1.9.0
+joblib==1.5.3

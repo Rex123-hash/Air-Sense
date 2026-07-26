@@ -1,0 +1,128 @@
+{
+  "model": {
+    "mae": 25.92,
+    "rmse": 37.02,
+    "r2": 0.801
+  },
+  "baseline_persistence": {
+    "mae": 34.94,
+    "rmse": 51.34
+  },
+  "improvement_pct_mae": 25.8,
+  "beats_baseline": true,
+  "n_train": 1580,
+  "n_test": 396,
+  "test_period": {
+    "start": "2004-06-02 23:00:00",
+    "end": "2004-06-23 12:00:00"
+  },
+  "train_period": {
+    "start": "2004-03-12 18:00:00",
+    "end": "2004-06-02 22:00:00"
+  },
+  "target": "nox",
+  "target_unit": "ppb",
+  "daily_profile": {
+    "0": 95.9,
+    "1": 69.6,
+    "2": 48.3,
+    "3": 48.5,
+    "4": 35.3,
+    "5": 46.0,
+    "6": 83.5,
+    "7": 175.4,
+    "8": 219.7,
+    "9": 210.8,
+    "10": 179.3,
+    "11": 153.6,
+    "12": 135.2,
+    "13": 128.5,
+    "14": 122.5,
+    "15": 125.4,
+    "16": 128.8,
+    "17": 152.4,
+    "18": 175.9,
+    "19": 198.4,
+    "20": 187.8,
+    "21": 138.3,
+    "22": 111.6,
+    "23": 111.1
+  },
+  "peak_insight": {
+    "evening_window": "18:00-21:00",
+    "overnight_window": "03:00-06:00",
+    "evening_mean_nox": 175.1,
+    "overnight_mean_nox": 53.3,
+    "ratio": 3.3
+  },
+  "feature_importance": [
+    {
+      "feature": "nox_lag_1",
+      "importance": 0.6106
+    },
+    {
+      "feature": "benzene_lag_1",
+      "importance": 0.1194
+    },
+    {
+      "feature": "hour_sin",
+      "importance": 0.0679
+    },
+    {
+      "feature": "hour_cos",
+      "importance": 0.0472
+    },
+    {
+      "feature": "nox_lag_3",
+      "importance": 0.0297
+    },
+    {
+      "feature": "nox_lag_24",
+      "importance": 0.0226
+    },
+    {
+      "feature": "nox_roll_24",
+      "importance": 0.0214
+    },
+    {
+      "feature": "temp_lag_1",
+      "importance": 0.0198
+    },
+    {
+      "feature": "no2_lag_1",
+      "importance": 0.0187
+    },
+    {
+      "feature": "nox_lag_2",
+      "importance": 0.0152
+    },
+    {
+      "feature": "humidity_lag_1",
+      "importance": 0.0124
+    },
+    {
+      "feature": "co_lag_1",
+      "importance": 0.0084
+    },
+    {
+      "feature": "nox_roll_3",
+      "importance": 0.0067
+    }
+  ],
+  "cleaning": {
+    "rows_raw": 2000,
+    "rows_clean": 2000,
+    "sentinels_replaced": 0,
+    "rows_dropped_missing_target": 0,
+    "nulls_filled": 0,
+    "duplicates_removed": 0,
+    "non_hourly_gaps": 63,
+    "source_pre_cleaned": true
+  },
+  "trained_with": {
+    "scikit_learn": "1.9.0",
+    "numpy": "2.4.4",
+    "pandas": "3.0.2",
+    "python": "3.14.4"
+  }
+}

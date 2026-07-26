@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AirSense — Forecasting the pollution peak before it arrives</title>
+<meta name="description" content="Hyper-local air-quality forecasting. Predicts the NOx peak before it arrives and attaches a recommended action.">
+<link rel="icon" type="image/svg+xml" href="logo.svg">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<div class="shell">
+
+  <!-- ───────────────────────────── SIDEBAR ───────────────────────────── -->
+  <aside class="sidebar" id="sidebar">
+    <div class="side-brand">
+      <img class="logo" src="logo.svg" alt="" width="34" height="34">
+      <span class="wordmark">AirSense</span>
+    </div>
+
+    <nav aria-label="Sections">
+      <a class="nav-item" href="#/dashboard" data-view="dashboard">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="2.5" y="2.5" width="6" height="6" rx="1.6"/><rect x="11.5" y="2.5" width="6" height="6" rx="1.6"/><rect x="2.5" y="11.5" width="6" height="6" rx="1.6"/><rect x="11.5" y="11.5" width="6" height="6" rx="1.6"/></svg>
+        Dashboard</a>
+      <a class="nav-item" href="#/forecast" data-view="forecast">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M2 14l5-5 3.5 3.5L18 5"/><path d="M13 5h5v5"/></svg>
+        Forecast</a>
+      <a class="nav-item" href="#/explorer" data-view="explorer">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 17V9M8 17V4M13 17v-6M18 17v-9"/></svg>
+        Data Explorer</a>
+      <a class="nav-item" href="#/model" data-view="model">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.5"/><circle cx="10" cy="10" r="3"/><path d="M10 2.5v3M10 14.5v3M2.5 10h3M14.5 10h3"/></svg>
+        Model Performance</a>
+      <a class="nav-item" href="#/zones" data-view="zones">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 18s6-5.2 6-10a6 6 0 10-12 0c0 4.8 6 10 6 10z"/><circle cx="10" cy="8" r="2.2"/></svg>
+        Campus Zones</a>
+      <a class="nav-item" href="#/method" data-view="method">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><ellipse cx="10" cy="5" rx="6.5" ry="2.5"/><path d="M3.5 5v10c0 1.4 2.9 2.5 6.5 2.5s6.5-1.1 6.5-2.5V5"/><path d="M3.5 10c0 1.4 2.9 2.5 6.5 2.5s6.5-1.1 6.5-2.5"/></svg>
+        Method &amp; Limits</a>
+      <a class="nav-item" href="/docs" target="_blank" rel="noopener">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 15l-4-5 4-5M13 5l4 5-4 5"/></svg>
+        API Docs</a>
+    </nav>
+
+    <div class="side-foot">
+      <div class="side-card">
+        <div class="live"><span class="dot"></span>Live demo</div>
+        <div class="loc">MAIT, Delhi</div>
+        <div class="sub">Historical dataset replay</div>
+
+        <div class="replay">
+          <button type="button" class="replay-btn" id="replay-btn"
+                  aria-haspopup="listbox" aria-expanded="false">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8"/><path d="M8.5 7l4.5 3-4.5 3z" fill="currentColor" stroke="none"/></svg>
+            Replay walkthrough
+          </button>
+          <ul class="replay-menu" id="replay-menu" role="listbox"
+              aria-label="Replay position" hidden></ul>
+        </div>
+
+        <div class="last">
+          <span>Dataset position</span>
+          <b id="side-asof">—</b>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="nav-scrim" id="nav-scrim" hidden></div>
+
+  <!-- ───────────────────────────── CONTENT ───────────────────────────── -->
+  <div class="content">
+    <header class="topbar">
+      <button class="nav-toggle" id="nav-toggle" aria-label="Open navigation" aria-expanded="false">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14"/></svg>
+      </button>
+      <div class="topbar-text">
+        <h1 id="view-title">Dashboard</h1>
+        <p id="view-sub">Current air quality and the next six hours.</p>
+      </div>
+      <span class="badge">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 18s6-5.2 6-10a6 6 0 10-12 0c0 4.8 6 10 6 10z"/><circle cx="10" cy="8" r="2.2"/></svg>
+        MAIT, Delhi
+      </span>
+    </header>
+
+    <main id="main">
+
+      <!-- data-mode notice: shown on every view, never dismissible -->
+      <div class="notice" role="note">
+        <svg class="notice-icon" viewBox="0 0 22 22" aria-hidden="true">
+          <circle cx="11" cy="11" r="9.2"/><path d="M11 10v5.5M11 6.8h.01"/>
+        </svg>
+        <div>
+          <div class="notice-title">Historical dataset replay — not a live sensor feed.</div>
+          <div class="notice-sub">UCI Air Quality Data Set (De Vito et al., 2008), 2000 hourly
+            readings from 11 Mar – 23 Jun 2004. Forecasts are computed live by the model from
+            data up to the selected hour only.</div>
+        </div>
+      </div>
+
+      <!-- ── view: DASHBOARD ── -->
+      <section class="view" id="view-dashboard" aria-labelledby="view-title">
+        <div id="hero" class="card hero"><div class="skeleton" style="height:250px"></div></div>
+        <p id="replay-hint" class="replay-hint" hidden></p>
+
+        <div class="sec-head" style="margin-top:26px">
+          <h2><span class="bar"></span>6-hour forecast</h2>
+          <span id="fc-issued" class="sec-meta"></span>
+        </div>
+        <div id="fc-banner" role="status" aria-live="polite"></div>
+        <div id="fc-cards" class="fc-grid"></div>
+        <p id="fc-assumption" class="caption"></p>
+      </section>
+
+      <!-- ── view: FORECAST ── -->
+      <section class="view" id="view-forecast" hidden>
+        <div class="sec-head">
+          <h2><span class="bar"></span>Recent history and forecast</h2>
+          <span class="legend">
+            <span class="lg"><span class="lg-line"></span>Measured (last 48 h)</span>
+            <span class="lg"><span class="lg-line dashed"></span>Forecast (next 6 h)</span>
+          </span>
+        </div>
+        <div class="card">
+          <div class="chart-box"><canvas id="chart-history"></canvas></div>
+          <p id="hist-summary" class="sr-only"></p>
+        </div>
+
+        <div class="sec-head" style="margin-top:26px">
+          <h2><span class="bar"></span>Hour by hour</h2>
+          <button type="button" class="btn-ghost" id="export-csv">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v10M6 9.5l4 4 4-4"/><path d="M3.5 16.5h13"/></svg>
+            Download CSV
+          </button>
+        </div>
+        <div class="card">
+          <div class="table-scroll">
+            <table class="tbl" id="fc-table">
+              <thead><tr>
+                <th>Horizon</th><th>Time</th><th>Predicted NOx</th>
+                <th>Risk band</th><th>Inputs</th><th>Recommended action</th>
+              </tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <p id="fc-assumption-2" class="caption"></p>
+        </div>
+      </section>
+
+      <!-- ── view: DATA EXPLORER ── -->
+      <section class="view" id="view-explorer" hidden>
+        <div class="sec-head">
+          <h2><span class="bar"></span>Daily pollution cycle</h2>
+          <span id="dp-meta" class="sec-meta"></span>
+        </div>
+        <div class="card">
+          <div class="chart-box sm"><canvas id="chart-profile"></canvas></div>
+          <p id="dp-caption" class="insight"></p>
+          <p id="dp-sub" class="caption"></p>
+          <p id="dp-summary" class="sr-only"></p>
+        </div>
+
+        <div class="sec-head" style="margin-top:26px">
+          <h2><span class="bar"></span>Cleaning summary</h2>
+        </div>
+        <div id="cleaning" class="card"><div class="skeleton" style="height:180px"></div></div>
+      </section>
+
+      <!-- ── view: MODEL PERFORMANCE ── -->
+      <section class="view" id="view-model" hidden>
+        <div class="sec-head">
+          <h2><span class="bar"></span>Model validation</h2>
+          <span id="val-pill"></span>
+        </div>
+        <div id="validation" class="card accent-card">
+          <div class="skeleton" style="height:300px"></div>
+        </div>
+
+        <div class="sec-head" style="margin-top:26px">
+          <h2><span class="bar"></span>Backtest — predicted vs actual</h2>
+          <span class="legend">
+            <span class="lg"><span class="lg-line" style="border-color:#9ca3af"></span>Actual</span>
+            <span class="lg"><span class="lg-line"></span>Predicted</span>
+          </span>
+        </div>
+        <div class="card">
+          <div class="chart-box"><canvas id="chart-backtest"></canvas></div>
+          <div id="bt-warn"></div>
+          <div id="bt-stats" class="kv" style="margin-top:16px"></div>
+          <p id="bt-note" class="caption"></p>
+          <p id="bt-summary" class="sr-only"></p>
+        </div>
+
+        <div class="sec-head" style="margin-top:26px">
+          <h2><span class="bar"></span>What the model relies on</h2>
+        </div>
+        <div class="card">
+          <div class="split">
+            <div><div class="chart-box tall"><canvas id="chart-importance"></canvas></div></div>
+            <div class="right">
+              <p style="font-size:15px;color:var(--text-2);margin:0">
+                Recent NOx and hour-of-day dominate — consistent with a traffic-driven
+                daily cycle. Every input is lagged by at least one hour, so the model
+                never sees the hour it is predicting.</p>
+              <p id="fi-top" class="caption"></p>
+            </div>
+          </div>
+          <p id="fi-summary" class="sr-only"></p>
+        </div>
+      </section>
+
+      <!-- ── view: ZONES ── -->
+      <section class="view" id="view-zones" hidden>
+        <div class="sec-head">
+          <h2><span class="bar"></span>Campus zones</h2>
+          <span class="pill-warn">⚠ Simulated</span>
+        </div>
+        <div id="zone-disclosure" class="disclose"></div>
+        <div id="zone-cards" class="zone-grid"></div>
+      </section>
+
+      <!-- ── view: METHOD & LIMITS ── -->
+      <section class="view" id="view-method" hidden>
+        <div class="sec-head"><h2><span class="bar"></span>Risk bands and actions</h2></div>
+        <div id="bands" class="card"><div class="skeleton" style="height:220px"></div></div>
+
+        <div class="sec-head" style="margin-top:26px"><h2><span class="bar"></span>Data source</h2></div>
+        <div class="card">
+          <p style="margin:0 0 12px"><b>UCI Air Quality Data Set</b> — De Vito, S., Massera, E.,
+            Piga, M., Martinotto, L., &amp; Di Francia, G. (2008). <i>On field calibration of an
+            electronic nose for benzene estimation in an urban pollution monitoring scenario.</i>
+            Sensors and Actuators B: Chemical, 129(2), 750–757.</p>
+          <p class="caption" style="margin-top:0">A contiguous 2000-row hourly slice
+            (11 Mar – 23 Jun 2004) is used. Pipeline: Data → Cleaning → Features → Model →
+            Forecast → Action.</p>
+        </div>
+
+        <div class="sec-head" style="margin-top:26px"><h2><span class="bar"></span>Limitations and honesty notes</h2></div>
+        <div class="card">
+          <ul class="limits" id="limits"></ul>
+        </div>
+
+        <div class="sec-head" style="margin-top:26px"><h2><span class="bar"></span>Credits</h2></div>
+        <div class="card">
+          <div class="credits">
+            <div>Built by <b>Amaan Khan</b> and <b>Srishti Rathi</b> · MAIT, Delhi</div>
+            <div>Python · scikit-learn · FastAPI · Chart.js · Google Cloud Run</div>
+            <div>Claude Code was used to build this. What matters is that we understand
+              and can defend every part of the result.</div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <footer>
+      <div class="footer-base">
+        © 2026 AirSense · Built by Amaan Khan and Srishti Rathi for the 1M1B portfolio submission.
+      </div>
+    </footer>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

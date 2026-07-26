@@ -1,0 +1,15 @@
+# NOTE: models/ and data/ must NOT be listed here. The container serves the
+# committed model and cleaned CSV; excluding them breaks the deploy.
+.git/
+.gitignore
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+env/
+notebooks/
+raw.csv
+.pytest_cache/
+.DS_Store
+*.log

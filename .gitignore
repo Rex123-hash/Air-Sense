@@ -1,0 +1,15 @@
+# raw.csv is a re-downloadable 652 KB cache; train.py fetches it if absent.
+raw.csv
+
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+env/
+.DS_Store
+*.log
+.pytest_cache/
+
+# models/ and data/ are deliberately NOT ignored -- they are the committed
+# offline artefacts the server loads at startup.
