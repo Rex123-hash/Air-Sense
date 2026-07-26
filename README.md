@@ -26,20 +26,20 @@ location, and attaches a concrete action you can take about it.
 
 ## <img src="docs/icons/toc.svg" width="20" height="20"> Table of contents
 
-- [The insight](#the-insight)
-- [What it does](#what-it-does)
-- [The six screens](#the-six-screens)
-- [Validation — the differentiator](#validation--the-differentiator)
-- [No data leakage](#no-data-leakage)
-- [Architecture](#architecture)
-- [Data and cleaning](#data-and-cleaning)
-- [API reference](#api-reference)
-- [Running locally](#running-locally)
-- [Deployment](#deployment)
-- [Design decisions](#design-decisions)
-- [Limitations and honesty notes](#limitations-and-honesty-notes)
-- [Roadmap](#roadmap)
-- [Credits](#credits)
+- [The insight](#-the-insight)
+- [What it does](#-what-it-does)
+- [The six screens](#-the-six-screens)
+- [Validation — the differentiator](#-validation--the-differentiator)
+- [No data leakage](#-no-data-leakage)
+- [Architecture](#-architecture)
+- [Data and cleaning](#-data-and-cleaning)
+- [API reference](#-api-reference)
+- [Running locally](#-running-locally)
+- [Deployment](#-deployment)
+- [Design decisions](#-design-decisions)
+- [Limitations and honesty notes](#-limitations-and-honesty-notes)
+- [Roadmap](#-roadmap)
+- [Credits](#-credits)
 
 ---
 
@@ -352,7 +352,7 @@ nothing.
 Tailwind and Chart.js load from CDNs and the app is plain HTML/CSS/JS. No npm, no
 bundler, no build cache — which removes an entire class of deployment failures.
 The trade-off is that the page needs internet access for styling; see
-[Limitations](#limitations-and-honesty-notes).
+[Limitations](#-limitations-and-honesty-notes).
 </details>
 
 <details>
@@ -399,7 +399,7 @@ sales pitch. These are real.
    single hour — roughly 3 % of rows.
 
 6. **The cleaning pass found 0 sentinels** because this source was pre-cleaned
-   upstream. See [Data and cleaning](#data-and-cleaning).
+   upstream. See [Data and cleaning](#-data-and-cleaning).
 
 7. **Replay bookmarks are curated** — chosen at hours where the model does forecast
    a peak, so the alert banner can be demonstrated.
