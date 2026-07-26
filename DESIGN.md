@@ -1,195 +1,234 @@
 # AirSense — UI Design Specification
 
-Complete specification of the interface: every page, section, component, button,
-state, and copy string. Written so that (a) the frontend can be built from it
-without further decisions, and (b) a UI mockup image can be generated from it.
+Complete specification of the interface: the app shell, every view, component,
+control, state and copy string. Written so that (a) the frontend can be built
+from it without further decisions, and (b) mockup images can be generated from
+it (§9).
 
-**All numbers in this document are the real values produced by the actual
-training run and API**, not illustrative placeholders. If you generate a mockup,
-use these exact numbers — a mockup showing different figures than the deployed
-app is worse than no mockup.
+**Every number in this document is a real value produced by the actual training
+run and API.** If you generate a mockup, use these exact figures — a mockup
+showing different numbers than the deployed app is worse than no mockup.
 
 ---
 
 ## 0. Product in one sentence
 
 AirSense predicts the hyper-local NOx pollution peak **before it arrives** and
-attaches a concrete recommended action, so air quality becomes something you plan
-around instead of something you react to.
+attaches a concrete recommended action, turning air quality from something you
+react to into something you plan around.
 
 ---
 
-## 1. Page inventory
+## 1. App structure
 
-**One page. No routing, no navigation, no login, no second screen.**
+A **sidebar shell** with six client-side views. No page reloads, no router
+library — the view is driven by `location.hash`.
 
-| Page | Route | Purpose |
+```
+┌────────────┬──────────────────────────────────────────────┐
+│            │  Topbar: view title + subtitle + location    │
+│  Sidebar   ├──────────────────────────────────────────────┤
+│  (250px)   │  Data-mode notice  (on every view)           │
+│            │                                              │
+│  brand     │  ┌────────────────────────────────────────┐  │
+│  nav ×7    │  │           active view content          │  │
+│            │  └────────────────────────────────────────┘  │
+│  ─────     │                                              │
+│  status    │  Footer line                                 │
+│  card      │                                              │
+└────────────┴──────────────────────────────────────────────┘
+```
+
+| View | Hash | Purpose |
 |---|---|---|
-| Dashboard | `/` | The entire product. Nine stacked sections, scrolled top to bottom. |
-| API docs | `/docs` | FastAPI's auto-generated Swagger UI. Free, not designed by us, not linked from the dashboard chrome but mentioned in the footer. |
+| **Dashboard** | `#/dashboard` | Hero reading + 6-hour forecast strip + alert banner |
+| **Forecast** | `#/forecast` | History joined to forecast chart, hour-by-hour table, CSV export |
+| **Data Explorer** | `#/explorer` | Daily pollution cycle + cleaning summary |
+| **Model Performance** | `#/model` | Validation metrics, backtest, early-warning skill, feature importance |
+| **Campus Zones** | `#/zones` | Four zones, labelled simulated |
+| **Method & Limits** | `#/method` | Risk bands, data citation, limitations, credits |
+| **API Docs** | `/docs` | FastAPI Swagger UI — external link, opens in a new tab |
 
-There is deliberately **no** settings page, no profile, no sidebar, and no
-hamburger menu. Adding them would imply functionality that does not exist.
+There is deliberately **no** login, settings page, profile, search, or theme
+toggle. Adding them would imply functionality that does not exist.
+
+**Deep links carry the replay position:**
+`#/dashboard?as_of=2004-06-23T06:00:00`
 
 ---
 
 ## 2. Design system
 
-### 2.1 Colour
-
-Dark theme only. The app is a monitoring dashboard; dark reduces glare on a
-projector and makes the risk colours pop.
+### 2.1 Colour — light theme, green eco brand
 
 | Token | Hex | Use |
 |---|---|---|
-| `bg-base` | `#0a0f1a` | Page background |
-| `bg-card` | `#111827` | Card surfaces |
-| `bg-card-raised` | `#1a2234` | Hovered / nested surfaces |
-| `border-subtle` | `#1f2937` | 1px card borders, dividers |
-| `text-primary` | `#f9fafb` | Headings, big numbers |
-| `text-secondary` | `#9ca3af` | Labels, captions |
-| `text-muted` | `#6b7280` | Footnotes, units, disclaimers |
-| `accent` | `#38bdf8` | Brand cyan: logo mark, links, focus rings |
-| `accent-dim` | `#0e7490` | Chart fills at low opacity |
+| `bg-base` | `#f4f5f6` | Page background |
+| `bg-card` | `#ffffff` | Card surfaces, sidebar, topbar |
+| `bg-raised` | `#f8f9fa` | Metric tiles, nested surfaces |
+| `border` | `#e5e7eb` | 1px card borders |
+| `border-soft` | `#eef0f2` | Inner dividers, table rules |
+| `text` | `#1f2937` | Headings, all large numbers |
+| `text-2` | `#4b5563` | Body copy |
+| `muted` | `#6b7280` | Labels, units, captions |
+| `brand` | `#15803d` | Section bars, active nav, chart lines, primary buttons |
+| `brand-dark` | `#14532d` | Wordmark |
+| `brand-light` | `#16a34a` | Validation card border, status dot |
+| `brand-tint` | `#eff7f1` | Active nav background, notice strip, callouts |
 
-**Risk band colours** — these are the only saturated colours on the page, so risk
-reads instantly. They come from the API (`risk_hex`), never hardcoded in the UI.
+**Risk band colours** — the only saturated colours on the page, so risk reads
+instantly. They come from the API (`risk_hex`) and are **never hardcoded in the
+UI**.
 
-| Band | NOx (ppb) | Hex | Swatch name |
-|---|---|---|---|
-| Low | `< 100` | `#22c55e` | green |
-| Moderate | `100 – 200` | `#f59e0b` | amber |
-| High | `200 – 300` | `#f97316` | orange |
-| Severe | `> 300` | `#ef4444` | red |
+| Band | NOx (ppb) | Hex |
+|---|---|---|
+| Low | `< 100` | `#22c55e` |
+| Moderate | `100 – 200` | `#f59e0b` |
+| High | `200 – 300` | `#f97316` |
+| Severe | `> 300` | `#ef4444` |
 
-> Bands are **project-defined operational thresholds for demonstration**. They are
-> NOT official CPCB or WHO AQI categories and must never be labelled as such.
-> This disclaimer appears in the UI, not only in this document.
+> Bands are **project-defined operational thresholds for demonstration**. They
+> are NOT official CPCB or WHO AQI categories and must never be labelled as
+> such. This disclaimer appears in the UI, not just in this document.
+
+**Colour usage rule:** large numeric values render in `text` (near-black), never
+in the band colour. Band identity is carried by the **pill, the dot, the card's
+top/left border, and the band name** — so colour is never the only signal.
 
 ### 2.2 Typography
 
 System font stack — no webfont, because a webfont is a network dependency that
-can fail during a live demo.
+can fail mid-demo.
 
 ```css
 font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-font-variant-numeric: tabular-nums;   /* numbers must not jitter when they update */
+font-variant-numeric: tabular-nums;   /* numbers must not jitter on update */
 ```
 
-| Role | Size / weight | Notes |
-|---|---|---|
-| Hero NOx number | 72px / 800, tabular | 56px on mobile |
-| Section heading | 20px / 700 | Preceded by a numbered accent bar |
-| Card metric | 30px / 700, tabular | |
-| Body | 14px / 400 | |
-| Label (uppercase) | 11px / 600, `letter-spacing: 0.08em` | Section eyebrows, card labels |
-| Caption / disclaimer | 12px / 400, `text-muted` | |
+| Role | Size / weight |
+|---|---|
+| Hero NOx number | 78px / 800 (62px ≤900px, 54px ≤640px) |
+| Metric tile value | 36px / 800 |
+| Zone value | 32px / 800 |
+| Forecast card value | 28px / 800 |
+| View title (topbar) | 22px / 700 |
+| Section heading | 21px / 700, preceded by a 4px green bar |
+| Body | 14px / 400 |
+| Uppercase label | 11.5–12px / 600, `letter-spacing: .07em` |
+| Caption | 12.5px / 400, `muted` |
 
-**Every number carries a unit.** `163.0 ppb`, never `163.0`. Units render at
-0.5em, `text-muted`, with a leading hair space.
+**Every number carries a unit** — `163.0 ppb`, never `163.0`. Units render at
+~0.45em in `muted`.
 
 ### 2.3 Spacing, radius, elevation
 
-- Spacing scale: `4 / 8 / 12 / 16 / 24 / 32 / 48 / 64` px.
-- Page container: `max-width: 1200px`, centred, `padding: 24px` (16px on mobile).
-- Section vertical rhythm: `48px` between sections, `16px` after a section heading.
-- Card radius `16px`; pill radius `9999px`; inner chip radius `8px`.
-- Card border `1px solid #1f2937`. Shadow `0 1px 3px rgba(0,0,0,0.4)`.
+- Spacing scale: `4 / 8 / 12 / 16 / 20 / 24 / 32 / 48`px
+- Sidebar 250px; content padding 24px 28px (16px on mobile)
+- Card radius 14px; pill radius 9999px; inner tile radius 12px
+- Card border `1px solid #e5e7eb`; shadow `0 1px 2px rgba(16,24,40,.04), 0 1px 3px rgba(16,24,40,.06)`
 - No glassmorphism, no gradient meshes, no decorative blur. It is an instrument panel.
 
-### 2.4 Motion
+### 2.4 Logo
 
-- Card entry: fade + 4px rise, 200ms `ease-out`, staggered 40ms.
-- Number updates: 400ms count-up on the hero figure only.
-- The alert banner: 2s `ease-in-out` infinite pulse on its **border only** (never
-  the text — pulsing text is unreadable).
-- `@media (prefers-reduced-motion: reduce)` disables all of the above.
+Vector leaf with airflow currents, in a green gradient (`#15803d → #4ade80`),
+with a darker midrib and three veins. Shipped as `app/static/logo.svg`, used for
+both the sidebar mark (34×34) and the favicon. A wide banner version with
+wordmark, tagline and a forecast sparkline lives at `docs/banner.svg` for the
+README.
+
+### 2.5 Motion
+
+- Sidebar slide-in on mobile: 220ms ease
+- Zone card hover: shadow lift, 150ms
+- Loading skeletons: 1.5s shimmer
+- `@media (prefers-reduced-motion: reduce)` disables all animation and transition
 
 ---
 
 ## 3. Global states
 
-Every data-driven section must define all four. No section may ever render blank.
+Every data-driven region must define all four. No region may render blank.
 
 | State | Treatment |
 |---|---|
-| **Loading** | Skeleton block: `bg-card-raised`, 16px radius, 1.5s shimmer. Same height as the loaded content so the page does not jump. |
-| **Loaded** | The real content. |
-| **Error** | Inside the card: ⚠ icon, `text-secondary` message "Could not load <thing>.", and a **Retry** button (see §5.4). Never an empty card, never a raw stack trace. |
-| **Empty** | Not reachable — the dataset is committed to the repo, so data always exists. If a chart somehow gets zero points, show the error state instead of an empty axis. |
+| **Loading** | Skeleton block, same height as loaded content so layout does not jump |
+| **Loaded** | Real content |
+| **Error** | ⚠ icon + "Could not load <thing>." + a **Retry** button, inside the card. Never a raw stack trace, never an empty card. |
+| **Empty** | Not reachable — data ships with the repo. A zero-length chart shows the error state instead of an empty axis. |
+
+If the API is unreachable at boot, a single card appears at the end of `main`
+with a Retry that reloads the page.
 
 ---
 
-## 4. Section-by-section specification
+## 4. The shell
 
-Rendered in this exact order.
+### 4.1 Sidebar (250px, sticky, full height)
+
+**Brand block** — `logo.svg` at 34×34, then `AirSense` at 22px/800 in `brand-dark`.
+
+**Nav** — seven items, each: 19px stroked icon + label, 10px/12px padding, 9px
+radius, 3px transparent left border.
+- Default: `text-2`
+- Hover: `bg-raised`, `text`
+- **Active: `brand-tint` background, `brand` text, 600 weight, `brand` left border**
+
+Icons (all 1.6px stroke, `currentColor`, no fill): four squares (Dashboard),
+trend line with arrow (Forecast), bar chart (Data Explorer), target/crosshair
+(Model Performance), map pin (Campus Zones), database cylinder (Method & Limits),
+angle brackets (API Docs).
+
+**Status card** (bottom, pushed down with `margin-top:auto`):
+- `● Live demo` — 8px `brand-light` dot + 13px `text-2`
+- `MAIT, Delhi` — 15px/700
+- `Historical dataset replay` — 12px `muted`
+- **Replay walkthrough** button (§6.1)
+- Divider, then `Dataset position` label over the current timestamp in bold
+
+> **Do not display GPS coordinates or a wall-clock "last updated" time.**
+> Coordinates imply a sensor physically at MAIT; a live timestamp implies a live
+> feed. Neither is true. Show the dataset position instead.
+
+### 4.2 Topbar (sticky, blurred white, 1px bottom border)
+
+Mobile nav toggle (hidden ≥861px) · view title (22px/700) + subtitle (13.5px
+`muted`) · location badge (pin icon + `MAIT, Delhi`, hidden ≤640px).
+
+Title and subtitle per view:
+
+| View | Title | Subtitle |
+|---|---|---|
+| Dashboard | Dashboard | Current air quality and the next six hours. |
+| Forecast | Forecast | Measured history joined to the six-hour prediction. |
+| Data Explorer | Data Explorer | The daily cycle the forecast is built on, and how the data was cleaned. |
+| Model Performance | Model Performance | Validation against a naive baseline, backtested hour by hour. |
+| Campus Zones | Campus Zones | Derived from one sensor stream — every value is labelled simulated. |
+| Method & Limits | Method & Limits | Risk bands, data source, and what this system cannot do. |
+
+### 4.3 Data-mode notice — on every view, not dismissible
+
+`brand-tint` background, ⓘ icon in `brand`, 14px radius.
+
+> **`Historical dataset replay — not a live sensor feed.`**
+> `UCI Air Quality Data Set (De Vito et al., 2008), 2000 hourly readings from 11 Mar – 23 Jun 2004. Forecasts are computed live by the model from data up to the selected hour only.`
 
 ---
 
-### Section 1 — Header
+## 5. View specifications
 
-**Layout:** full-width bar, sticky at top, `bg-base` at 80% opacity with
-`backdrop-filter: blur(8px)`, `1px` bottom border `border-subtle`, height 64px.
-Content constrained to the 1200px container. Left group and right group,
-`justify-content: space-between`.
+### 5.1 Dashboard
 
-**Left group** (horizontal, 12px gap):
-1. **Logo mark** — 28×28px rounded square, `accent` cyan, containing a white
-   upward-trending line-chart glyph. No external image; inline SVG.
-2. **Wordmark** — `AirSense`, 20px / 800, `text-primary`.
-3. **Tagline** — `Forecasting the pollution peak before it arrives.` 13px,
-   `text-secondary`. Hidden below 900px viewport width.
+**Hero card** — white, 5px left border in the current band colour, 26px/30px padding.
 
-**Right group** (horizontal, 8px gap):
-4. **Location badge** — pill, `bg-card`, 1px `border-subtle`, 12px text
-   `text-secondary`. Content: a 6px `accent` dot + `Live demo · MAIT, Delhi`.
-5. **Replay control** — see §5.1. This is the only interactive control in the header.
+Two columns (`1fr / 1.15fr`, stacked ≤900px):
 
-**Copy, verbatim:**
-- Wordmark: `AirSense`
-- Tagline: `Forecasting the pollution peak before it arrives.`
-- Badge: `Live demo · MAIT, Delhi`
+*Left:* `CURRENT READING` label · `163.0` at 78px/800 in `text` + `ppb` at 26px
+`muted` · band pill (`#f59e0b` text on `#f59e0b1f`, dot + `Moderate`) ·
+`Dataset time · 23 Jun 2004, 12:00`.
 
----
+> The words **"Dataset time"** are mandatory. A bare time would read as "now".
 
-### Section 2 — Data-mode notice
-
-A single full-width strip immediately below the header. **Not dismissible.** This
-is the honesty disclosure and hiding it behind an interaction would defeat it.
-
-**Layout:** `bg-card`, 1px `border-subtle`, radius 12px, padding 12px 16px,
-horizontal, 10px gap, ⓘ icon in `accent`.
-
-**Copy, verbatim:**
-
-> `Historical dataset replay — not a live sensor feed.` *(13px, `text-primary`)*
-> `UCI Air Quality Data Set (De Vito et al., 2008), 2000 hourly readings from 11 Mar – 23 Jun 2004. Forecasts are computed live by the model from data up to the selected hour only.` *(12px, `text-muted`)*
-
----
-
-### Section 3 — Hero status card
-
-**The screenshot that goes in the deck. Give it the most visual weight on the page.**
-
-**Layout:** one card, full container width, padding 32px, radius 16px. A `4px`
-left border in the current band's colour. Two columns at ≥768px
-(`grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr)`), stacked below that.
-
-**Left column:**
-1. Eyebrow label: `CURRENT READING` (uppercase label style).
-2. **Hero number row** — baseline-aligned: `163.0` at 72px/800 in the band
-   colour, then ` ppb` at 24px `text-muted`.
-3. **Band pill** — `bg` = band colour at 15% opacity, `1px` border of the band
-   colour at 40%, text in the band colour, 13px/700, padding 6px 14px. Content: a
-   filled 8px dot + band name, e.g. `Moderate`.
-4. Timestamp: `Dataset time · 23 Jun 2004, 12:00` — 13px `text-secondary`. The
-   words "Dataset time" are mandatory; writing just a time would imply "now".
-
-**Right column — co-pollutant grid.** 2×3 grid (2×2 + 1 on mobile), 12px gap.
-Each cell: `bg-card-raised`, radius 8px, padding 12px; label 11px `text-muted`
-uppercase, value 18px/700 `text-primary` with its unit at 0.55em.
-
-Exact cells and real current values:
+*Right:* 3×2 tile grid (2×3 ≤640px), each `bg-raised`, 12px radius:
 
 | Label | Value | Unit |
 |---|---|---|
@@ -200,67 +239,33 @@ Exact cells and real current values:
 | `HUMIDITY` | 20.5 | % |
 | `HOUR` | 12:00 | — |
 
-**Full-width footer inside the card** — the recommended action. Separated by a
-1px `border-subtle` top rule, 20px padding-top, 20px margin-top.
-- Label: `RECOMMENDED ACTION NOW` (uppercase label, `text-muted`).
-- Text: 16px `text-primary`, e.g.
-  `Prefer indoor activity for sensitive individuals. Monitor.`
-- Below it, 11px `text-muted`:
-  `Project-defined operational bands for demonstration — not official CPCB/WHO standards.`
+*Card footer:* 1px rule, then `RECOMMENDED ACTION NOW` label, the action at
+21px/700 (`Prefer indoor activity for sensitive individuals. Monitor.`), and the
+threshold note at 12.5px `muted`.
 
----
+*Below the card,* when a non-default replay position is active:
+`Viewing the dataset as it stood at 23 Jun 2004, 06:00. The forecast uses only data up to that hour.`
 
-### Section 4 — Forecast strip
+**Alert banner** — rendered above the forecast cards when any of the next 6 hours
+is High or Severe (`forecast.alert != null`). Band colour at 8% background, 1px
+border in the band colour, 14px radius.
 
-**Heading:** numbered accent bar + `6-hour forecast` + right-aligned 12px
-`text-muted`: `Issued from 23 Jun 2004, 06:00`.
+- 44px filled circle in the band colour with a white warning triangle
+- Line 1, 20px/700: `Peak predicted in 2 hours — act now.` *(singular "1 hour" when n=1)*
+- Line 2, 14px `text-2`: `Forecast reaches 239.7 ppb (High) at 08:00. Increase ventilation/filtration indoors. Move outdoor sessions indoors.`
+- Right chip, white with band border: `6H PEAK` over `256.0 ppb`
 
-#### 4a. Alert banner (conditional)
+**Calm variant** (`alert == null`) — identical geometry in `brand` green, with a
+check icon: `No High or Severe hours in the next 6 hours.` /
+`Forecast peaks at 199.9 ppb (Moderate) at 18:00.`
 
-Rendered **above** the cards, only when any of the next 6 hours is High or Severe
-(API: `forecast.alert != null`). This element is the product thesis in one piece
-of UI — make it unmissable.
+**Forecast strip** — 6 cards (`repeat(6,1fr)`; 3 ≤1180px; 2 ≤640px). Never a
+horizontal scroller. Each card is centred, with a 5px top bar in its band colour:
 
-**Layout:** full width, `bg` = alert band colour at 12% opacity, `1.5px` border in
-the band colour (pulsing), radius 12px, padding 16px 20px. Horizontal: a 20px
-warning triangle in the band colour, then a text stack, then the peak chip
-right-aligned.
+offset chip (band-tinted pill) · time · value 28px/800 in `text` + unit · band
+name with dot in band colour · footnote.
 
-**Copy (values from the API, `{n}` = `alert.hours_ahead`):**
-- Line 1, 18px/700 `text-primary`: `Peak predicted in 2 hours — act now.`
-  - Singular form when `n == 1`: `Peak predicted in 1 hour — act now.`
-- Line 2, 13px `text-secondary`:
-  `Forecast reaches 239.7 ppb (High) at 08:00. Increase ventilation/filtration indoors. Move outdoor sessions indoors.`
-- Right chip: `bg-card`, radius 8px, padding 8px 12px. Label `6H PEAK` 10px
-  `text-muted` over `256.0 ppb` 18px/700 in the band colour.
-
-**When `alert == null`** the banner is replaced by a calm equivalent — same
-geometry, green, so the layout does not shift:
-- `No High or Severe hours in the next 6 hours.`
-- `Forecast peaks at 199.9 ppb (Moderate) at 18:00.`
-
-#### 4b. The six cards
-
-`display: grid`, `grid-template-columns: repeat(6, 1fr)`, 12px gap. Breakpoints:
-6 across ≥1024px, 3 across 640–1023px, 2 across <640px. **Never a horizontal
-scroller** — judges may be on a phone.
-
-Each card: `bg-card`, 1px `border-subtle`, radius 12px, padding 14px, and a **4px
-colour bar** flush across the top in that hour's band colour.
-
-Contents, top to bottom:
-1. Offset chip: `t+1` … `t+6`, 11px/700, `text-muted`, `bg-card-raised`, radius
-   9999px, padding 2px 8px.
-2. Clock time: `07:00`, 12px `text-secondary`.
-3. Predicted value: `184.0` 30px/700 tabular in the band colour + ` ppb` at 0.5em
-   `text-muted`.
-4. Band name: 12px/600 in the band colour.
-5. **Confidence footnote** — 10px `text-muted`. On the `t+1` card: `measured
-   inputs`. On `t+2`…`t+6`: `model-fed inputs`. This is driven by the API's
-   `inputs_measured` flag and is how the UI admits that error compounds with
-   horizon.
-
-**Real values at the demo replay position (`as_of=2004-06-23T06:00`):**
+At the demo replay position `as_of=2004-06-23T06:00`:
 
 | Card | Time | Predicted | Band | Footnote |
 |---|---|---|---|---|
@@ -271,118 +276,99 @@ Contents, top to bottom:
 | t+5 | 11:00 | 234.7 ppb | High | model-fed inputs |
 | t+6 | 12:00 | 235.0 ppb | High | model-fed inputs |
 
-**Assumption caption** below the grid, 11px `text-muted`, full width:
+The `measured inputs` / `model-fed inputs` footnote is driven by the API's
+`inputs_measured` flag and is how the UI admits error compounds with horizon.
+
+**Assumption caption**, full width, 12.5px `muted`:
 `Recursive multi-step forecast · exogenous features held constant. Temperature, humidity and co-pollutants are held at their last observed values; from t+2 the NOx lags are fed by the model's own predictions, so uncertainty grows with the horizon.`
 
----
+### 5.2 Forecast
 
-### Section 5 — History + forecast chart
+**Chart card** — legend top-right: solid green `Measured (last 48 h)`, dashed
+green `Forecast (next 6 h)`. Chart height 340px (300px mobile).
 
-**Heading:** `Recent history and forecast` + right-aligned legend.
+- Solid `#15803d` 2.5px line for 48 measured hours, point marker only on the last
+- Dashed `[7,5]` continuation **starting at the last measured point** so the lines join
+- Risk-band zones tinted at 10% behind the data, labelled in an 84px right gutter
+- Vertical dashed `now` divider at the last measured hour, with rotated label
+- Axes: `Time (hourly)`, `NOx (ppb)` from zero
+- Dark `#1f2937` tooltip: `23 Jun 2004, 08:00` / `239.7 ppb · Forecast`
+- `mode:'index'`, no zoom, no pan — nothing accidentally triggerable during a demo
 
-**Legend** (12px `text-secondary`, 16px gap between items):
-- 12px solid `accent` line swatch + `Measured (last 48 h)`
-- 12px dashed `accent` line swatch + `Forecast (next 6 h)`
+**Hour-by-hour table** — columns: Horizon · Time · Predicted NOx · Risk band ·
+Inputs · Recommended action. Horizontally scrollable inside its card below 640px.
+Header has a **Download CSV** button (§6.4).
 
-**Chart:** Chart.js line chart. Container height 340px desktop / 260px mobile.
+### 5.3 Data Explorer
 
-- **X axis** — hourly timestamps. Label: `Time (hourly)`. Ticks `HH:00`, with the
-  date shown at midnight crossings. `maxTicksLimit: 12`, no rotation.
-- **Y axis** — label `NOx (ppb)`, begins at zero, grid `#1f2937` at 60% opacity.
-- **Series 1 — measured:** solid `#38bdf8`, 2px, no point markers except the final
-  one (4px filled), `tension: 0.3`.
-- **Series 2 — forecast:** dashed `[6,4]`, 2px, same cyan at 90%, 3px point
-  markers, `tension: 0.3`. **Starts at the last measured point** so the two lines
-  visibly join rather than floating apart.
-- **Risk bands as horizontal background zones**, drawn behind the data at 8%
-  opacity of each band colour: 0–100 green, 100–200 amber, 200–300 orange,
-  300+ red. Each labelled at the right edge, 10px, band colour at 70%.
-- **Vertical "now" divider** at the last measured timestamp: 1px dashed
-  `#6b7280`, with the rotated label `now` above the plot area.
-- **Tooltip:** dark `#1a2234` card, 1px `border-subtle`, showing
-  `23 Jun 2004, 08:00` then `239.7 ppb · High` then `Forecast` or `Measured`.
-- **Interaction:** `mode: 'index'`, `intersect: false`. No zoom, no pan, no
-  brushing — nothing that can be accidentally triggered during a live demo.
+**Daily cycle chart** — 24 bars, one per hour-of-day, 340px tall.
+- Each bar coloured by the band its own mean falls into
+- Hours 18–21 get full opacity and a 2px `#ea580c` border
+- Value labels printed above every bar
+- An orange bracket spans hours 18–21, labelled `6–9 PM traffic window`
+- Risk zones tinted behind, labelled in the right gutter
+- Axes: `Hour of day (0–23)`, `Mean NOx (ppb)`
 
----
-
-### Section 6 — Daily profile chart
-
-**Heading:** `Daily pollution cycle` + right-aligned 12px `text-muted`:
-`Mean of 2000 hourly readings · 83.3 days`.
-
-**Chart:** Chart.js bar chart, 24 bars, one per hour-of-day. Height 280px.
-
-- X axis label `Hour of day (0–23)`, ticks every 2 hours.
-- Y axis label `Mean NOx (ppb)`.
-- **Bar colours:** each bar coloured by the band its own mean falls into, at 85%
-  opacity. Bars in the **18:00–21:00 evening window** get a 2px `#f97316`
-  top border and full opacity so the window reads as highlighted.
-- An annotation bracket spans hours 18–21 above the bars, labelled
-  `6–9 PM traffic window`, 11px `#f97316`.
-
-**Real bar values (ppb), hour 0 → 23:**
+Real values, hour 0 → 23:
 `95.9, 69.6, 48.3, 48.5, 35.3, 46.0, 83.5, 175.4, 219.7, 210.8, 179.3, 153.6,
 135.2, 128.5, 122.5, 125.4, 128.8, 152.4, 175.9, 198.4, 187.8, 138.3, 111.6, 111.1`
 
-**Caption below the chart** — the core insight, computed live, **never hardcoded**:
+Meta: `Mean of 2000 hourly readings · 83.3 days`
 
-> `Evening peak averages 3.3x overnight levels (175.1 ppb in 18:00–21:00 vs 53.3 ppb in 03:00–06:00).` *(14px `text-primary`)*
-> `Pollution is not random — it is a predictable daily cycle tracking traffic. That predictability is what makes forecasting viable.` *(12px `text-muted`)*
+Caption (computed live, **never hardcoded**):
+> `Evening peak averages 3.3x overnight levels (175.1 ppb in 18:00–21:00 vs 53.3 ppb in 03:00–06:00).` *(15px/600)*
+> `Pollution is not random — it is a predictable daily cycle tracking traffic. That predictability is what makes forecasting viable.` *(12.5px muted)*
 
----
+**Cleaning summary** — 3×2 tile grid, then the five numbered cleaning steps, then
+the honesty caption.
 
-### Section 7 — Model validation card
+| Rows in | Rows out | Sentinels replaced | Nulls filled | Duplicates removed | Non-hourly gaps |
+|---|---|---|---|---|---|
+| 2000 | 2000 | **0** | 0 | 0 | 63 |
 
-**This is the differentiator. Give it real visual weight — border in `accent`, not
-`border-subtle`.**
+Caption: `This source was already cleaned upstream, so the sentinel pass found nothing to replace. The guard remains because a raw UCI file contains thousands of −200 values. We are not claiming credit for removing sentinels that were not there.`
 
-**Heading:** `Model validation` + a pill on the right: `bg` green at 15%, text
-`#22c55e`, 12px/700, content `Beats baseline`. (Driven by `metrics.beats_baseline`
-— if it were ever false the pill must read `Does not beat baseline` in red. Do not
-suppress it.)
+### 5.4 Model Performance — the differentiator
 
-**Layout:** card, padding 24px. A 4-up metric grid (2-up on mobile), 16px gap,
-then a comparison bar, then the footnote block.
+**Validation card** — 1.5px `brand-light` border (the only accent-bordered card).
+Heading pill: `✓ Beats baseline` (green). If `beats_baseline` were ever false it
+must read `✕ Does not beat baseline` in red — never suppressed.
 
-**Metric tiles** — each `bg-card-raised`, radius 12px, padding 16px: 11px
-`text-muted` uppercase label, 30px/700 tabular value, 11px `text-muted` sublabel.
+Four metric tiles:
 
 | Label | Value | Sublabel |
 |---|---|---|
-| `TEST MAE` | `25.92 ppb` | `our model` |
-| `BASELINE MAE` | `34.94 ppb` | `persistence` |
-| `IMPROVEMENT` | `25.8 %` | `lower error vs baseline` — value in `#22c55e` |
-| `R²` | `0.801` | `on held-out test set` |
+| `TEST MAE` | 25.92 ppb | our model |
+| `BASELINE MAE` | 34.94 ppb | persistence |
+| `IMPROVEMENT` | 25.8 % *(in `brand` green)* | lower error vs baseline |
+| `R²` | 0.801 | on held-out test set |
 
-**Comparison bar** — two stacked horizontal bars sharing one scale, making the
-improvement visible rather than merely stated:
-- Row 1: label `AirSense`, bar width ∝ 25.92, fill `accent`, value `25.92 ppb`.
-- Row 2: label `Persistence`, bar width ∝ 34.94, fill `#6b7280`, value `34.94 ppb`.
-- Bar height 10px, radius 9999px, track `bg-card-raised`.
-- Caption: `Mean absolute error — lower is better.`
+Then a two-column split — left: comparison bars on a shared scale (`AirSense`
+green 25.92 ppb, `Persistence` grey 34.94 ppb, caption `Mean absolute error —
+lower is better.`); right, behind a vertical rule:
 
-**Footnote block**, 1px top rule, 16px padding-top, 12px `text-secondary`, one
-line each:
 - `Chronological train/test split — no future data leaked into training.`
-- `Train: 1580 rows · 12 Mar 2004 18:00 → 2 Jun 2004 22:00`
-- `Test: 396 rows · 2 Jun 2004 23:00 → 23 Jun 2004 12:00`
+- `Train: 1580 rows · 12 Mar 2004, 18:00 → 2 Jun 2004, 22:00`
+- `Test: 396 rows · 2 Jun 2004, 23:00 → 23 Jun 2004, 12:00`
 - `Baseline "persistence" predicts next hour = current hour — the honest naive benchmark.`
 - `Co-pollutants and weather lagged 1 h, so every feature was knowable before the predicted hour.`
 
----
+**Backtest card** — legend: grey `Actual`, green `Predicted`. A 396-point line
+chart across the whole held-out test period, risk zones tinted behind, 340px.
 
-### Section 8 — Feature importance
+Below it, an **early-warning callout** (`brand-tint`, 4px green left border):
+> `EARLY WARNING · 1 HOUR AHEAD`
+> `Of the 72 hours that actually exceeded 200 ppb (High) in the test period, the model flagged 52 of them an hour in advance — 72.2% caught, 77.6% of warnings correct (20 missed, 15 false alarms).`
 
-**Heading:** `What the model relies on`.
+Then a 3×2 stat grid:
 
-**Chart:** horizontal bar chart, 13 rows (all features), height 320px. Bars in
-`accent`, descending. Value labels to the right of each bar as percentages, 11px
-`text-secondary`. Y-axis tick labels use the raw feature names in `ui-monospace`,
-12px — they are the actual column names and dressing them up would obscure what
-the model really consumes.
+| Hours tested | Median error | Within 25 ppb | Within 50 ppb | Worst error | Baseline MAE |
+|---|---|---|---|---|---|
+| 396 | 17.52 ppb | 61.6 % | 86.4 % | 166.3 ppb | 34.94 ppb |
 
-**Real values:**
+**Feature importance** — two-column split: horizontal green bar chart (13 rows,
+raw importance values printed to the right of each bar, monospace y-labels, x-axis
+hidden) on the left; explanatory copy on the right behind a rule.
 
 | Feature | Importance |
 |---|---|
@@ -400,34 +386,19 @@ the model really consumes.
 | `co_lag_1` | 0.0084 |
 | `nox_roll_3` | 0.0067 |
 
-**Caption:** `Recent NOx and hour-of-day dominate — consistent with a traffic-driven daily cycle. Every input is lagged by at least one hour.`
+Copy: `Recent NOx and hour-of-day dominate — consistent with a traffic-driven daily cycle. Every input is lagged by at least one hour, so the model never sees the hour it is predicting.`
 
----
+### 5.5 Campus Zones
 
-### Section 9 — Campus zones
+Heading pill: `⚠ Simulated` (amber, bordered — deliberately not subtle).
 
-**Heading:** `Campus zones` + a **warning pill** on the right, not a subtle one:
-`bg` amber at 15%, 1px amber border, text `#f59e0b`, 12px/700, content
-`⚠ Simulated`.
+**Mandatory disclosure strip** before the cards — amber tinted, warning icon:
+> **`simulated zone offset — single sensor stream.`** `We have one sensor, not four. Each zone applies a fixed documented multiplier to the one real measured value (163.0 ppb) to demonstrate the multi-zone design. These are not four independent sensors.`
 
-**Mandatory disclosure strip** directly under the heading, before the cards.
-`bg` amber at 8%, 1px amber at 25%, radius 8px, padding 10px 14px, 12px
-`text-secondary`:
-
-> `simulated zone offset — single sensor stream.` *(in `#f59e0b`, 600 weight)*
-> `We have one sensor, not four. Each zone applies a fixed documented multiplier to the one real measured value (163.0 ppb) to demonstrate the multi-zone design. These are not four independent sensors.`
-
-**Cards:** 4-up grid (2-up mobile), 12px gap. Each `bg-card`, 1px `border-subtle`,
-radius 12px, padding 16px, with a 3px left border in its band colour:
-1. Zone name, 15px/700 `text-primary`.
-2. Value, 24px/700 tabular in band colour + ` ppb`.
-3. Band name, 12px/600 band colour.
-4. Multiplier chip: `bg-card-raised`, radius 9999px, 10px `text-muted`, e.g. `×1.25`.
-5. Rationale, 11px `text-muted`.
-6. A small `simulated` tag, 10px, amber at 70% — **on every card**, not only in
-   the section header.
-
-**Real values (derived from measured 163.0 ppb):**
+Four cards (2-up ≤1180px, 1-up ≤640px), each with a 5px left border in its band
+colour: name 16.5px/700 · value 32px/800 in `text` · a row containing the band
+pill and the `×1.25` multiplier chip · rationale above a hairline rule · an
+amber `simulated` tag **on every card**.
 
 | Zone | Value | Band | Multiplier | Rationale |
 |---|---|---|---|---|
@@ -436,222 +407,184 @@ radius 12px, padding 16px, with a 3px left border in its band colour:
 | Central Lawn | 146.7 ppb | Moderate | ×0.90 | Open ground, set back from the road |
 | Library Block | 130.4 ppb | Moderate | ×0.80 | Sheltered, furthest from the carriageway |
 
----
+Zone cards are **not clickable** and must not look clickable — no chevron, no
+pointer cursor. Hover lifts the shadow only.
 
-### Section 10 — Footer
+### 5.6 Method & Limits
 
-1px top border, 32px padding, 12px `text-secondary`, three stacked blocks 12px apart.
-
-**Block 1 — How it works.** A horizontal chevron flow, wrapping on mobile. Each
-step a `bg-card` chip, radius 8px, padding 6px 12px, separated by `›` in
-`text-muted`:
-`Data › Cleaning › Features › Model › Forecast › Action`
-
-**Block 2 — Credits.**
-- `Data source: UCI Air Quality Data Set — De Vito et al. (2008), multi-sensor device readings.`
-- `Built by Amaan Khan and Srishti Rathi · MAIT, Delhi`
-- `Python · scikit-learn · FastAPI · Chart.js · Google Cloud Run`
-
-**Block 3 — Honesty notes.** 11px `text-muted`, a real bulleted list:
-- `Single sensor stream — the four campus zones are simulated offsets, labelled as such.`
-- `Historical dataset (2004), not a live feed.`
-- `Exogenous features held constant in the recursive forecast.`
-- `Risk bands are project-defined for demonstration, not official CPCB/WHO standards.`
-- `Lag features are positional; 63 of 2000 intervals are not exactly one hour.`
-- `Cleaning found 0 sentinel values — this source file was already cleaned upstream.`
-
-Right-aligned link, `accent`: `API docs` → `/docs`.
+1. **Risk bands table** — Band pill · NOx range · Recommended action, for all four
+   bands, followed by the `project-defined … not official CPCB/WHO standards` note.
+2. **Data source** — full De Vito et al. (2008) citation and the pipeline line.
+3. **Limitations** — the seven honesty notes as a real bulleted list, with the
+   gap count and sentinel count injected from `metrics.json` rather than typed.
+4. **Credits** — team, stack, and the AI-tools disclosure.
 
 ---
 
-## 5. Interactive controls — the complete list
+## 6. Interactive controls — the complete list
 
-The page has **five** interactive elements. That is the entire interaction surface;
-anything else in a mockup is wrong.
+Nine interactive elements. Anything else in a mockup is wrong.
 
-### 5.1 Replay position selector — header
+| # | Control | Behaviour |
+|---|---|---|
+| 6.1 | **Replay walkthrough** dropdown (sidebar) | Green outlined pill button + play icon. Opens a listbox of 5 options above it. Sets `?as_of=` in the hash. |
+| 6.2 | **Nav links** ×6 | Switch view via hash. Each link **carries the current `as_of`** so the replay position survives navigation. |
+| 6.3 | **API Docs** link | Opens `/docs` in a new tab (`target="_blank" rel="noopener"`). |
+| 6.4 | **Download CSV** (Forecast view) | Exports the current forecast with `#` provenance headers: issue time, data mode, assumption, threshold note. |
+| 6.5 | **Mobile nav toggle** | ≤860px only. Slides the sidebar in; sets `aria-expanded`. |
+| 6.6 | **Nav scrim** | Closes the mobile sidebar on click. |
+| 6.7 | **Chart tooltips** | Hover/tap on any of the four charts. |
+| 6.8 | **Retry buttons** | Only inside a failed region. |
+| 6.9 | **Skip to content** link | Visible on keyboard focus only. |
 
-The only significant control. A native `<select>`, styled: `bg-card`, 1px
-`border-subtle`, radius 8px, padding 6px 10px, 12px `text-primary`, custom cyan
-chevron. Focus: 2px `accent` ring.
+**Replay options** (populated from `GET /api/replay`, never hardcoded):
 
-- Preceded by an 11px `text-muted` label: `REPLAY`.
-- Options, in order — first is default on load:
-
-| Option label | `as_of` sent |
+| Label | `as_of` |
 |---|---|
-| `Latest reading (23 Jun 12:00)` | *(none — omitted from the request)* |
-| `Peak inbound — alert in 2h` | `2004-06-23T06:00:00` |
+| `Latest reading (23 Jun 12:00)` | *(none)* |
+| `Peak inbound - alert in 2h` | `2004-06-23T06:00:00` |
 | `Overnight trough before morning rush` | `2004-06-21T04:00:00` |
 | `Quiet night, peak 6h out` | `2004-06-17T01:00:00` |
 | `Morning build-up` | `2004-06-18T06:00:00` |
 
-- Populated from `GET /api/replay`, not hardcoded in the HTML.
-- **On change:** re-fetch `/api/current`, `/api/history`, `/api/forecast`,
-  `/api/zones` with the new `as_of`; those four sections enter their loading state.
-  Validation, daily-profile and feature-importance do **not** refetch — they
-  describe the model and the whole dataset, not a moment in it.
-- A 11px `text-muted` hint sits under the hero card when a non-default option is
-  selected: `Viewing the dataset as it stood at 23 Jun 2004, 06:00. The forecast uses only data up to that hour.`
+On change, only **Dashboard, Forecast and Zones data** refetch. Validation,
+backtest, daily profile and feature importance describe the model and the whole
+dataset, not a moment in it.
 
-### 5.2 Chart tooltips
-Hover (desktop) / tap (touch) on either chart. Not a button; no click target
-beyond the tooltip. Cursor `crosshair` over the plot area.
-
-### 5.3 `API docs` link — footer
-Text link, `accent`, underline on hover, opens `/docs` in the same tab.
-
-### 5.4 Retry button — error states only
-Appears only inside a card that failed to load. `bg-card-raised`, 1px
-`border-subtle`, radius 8px, padding 6px 12px, 12px `text-primary`, label
-`Retry`. Re-issues that section's fetch.
-
-### 5.5 Zone card hover
-Background lifts `bg-card` → `bg-card-raised`, 150ms. Purely affordance feedback;
-zone cards are **not** clickable and must not look clickable — no chevron, no
-pointer cursor.
-
-**Explicitly NOT present:** no login, no signup, no search, no filters, no date
-picker beyond the replay select, no theme toggle, no export/download, no share,
-no notification bell, no settings gear, no sidebar, no tabs, no modal, no
-hamburger menu, no "upgrade" CTA.
+**Explicitly NOT present:** login, signup, search, filters, theme toggle, share
+button, notification bell, settings gear, tabs, modals, "upgrade" CTA, or any
+link to a page that does not exist (no Privacy policy or Terms of use — shipping
+dead links is worse than omitting them).
 
 ---
 
-## 6. Responsive behaviour
+## 7. Responsive behaviour
 
 | Breakpoint | Layout |
 |---|---|
-| ≥1024px | Container 1200px. Hero 2-col. Forecast 6-across. Metrics 4-up. Zones 4-up. |
-| 768–1023px | Hero 2-col. Forecast 3-across (2 rows). Metrics 2-up. Zones 2-up. |
-| 640–767px | Hero stacks. Forecast 3-across. Metrics 2-up. Zones 2-up. |
-| <640px | Everything single-column except forecast (2-across) and zones (2-up). Hero number 56px. Tagline hidden. Charts 260px. Padding 16px. |
+| ≥1181px | Sidebar fixed. Forecast 6-across. Metrics 4-up. Zones 4-up. Splits two-column. |
+| 901–1180px | Forecast 3-across. Metrics 2-up. Zones 2-up. Splits collapse to one column with a top rule. |
+| 861–900px | Hero stacks; hero number 62px. |
+| ≤860px | **Sidebar becomes off-canvas** with a toggle and scrim. Content padding 16px. |
+| ≤640px | Forecast 2-across. Pollutants 2-up. Zones 1-up. Charts 300px. Hero number 54px. Topbar subtitle and location badge hidden. |
 
-Mobile rules: minimum touch target 44×44px (the replay select gets 44px height);
-no horizontal page scroll at 360px width; charts stay inside their card.
+Mobile rules: minimum 44×44px touch targets; **no horizontal page scroll at
+360px**; charts constrained by `canvas { max-width: 100% }`; wide tables scroll
+inside their own card.
 
 ---
 
-## 7. Accessibility
+## 8. Accessibility
 
-- Contrast ≥ 4.5:1 for body text. The band colours are used for large text and
-  fills only; band identity is **never conveyed by colour alone** — the band name
-  is always printed next to the swatch.
+- Body text contrast ≥ 4.5:1. Band colours are used for pills, borders and fills;
+  **band identity is never conveyed by colour alone** — the band name is always printed.
 - Every `<canvas>` has an adjacent visually-hidden text summary of the same data.
-- Landmarks: `<header>`, `<main>`, `<footer>`; sections use `<section
-  aria-labelledby>`.
-- The alert banner is `role="status" aria-live="polite"` so it is announced when it
-  appears.
-- Visible 2px `accent` focus ring on the select, links and the retry button.
-- Loading skeletons carry `aria-busy="true"`.
+- Landmarks: `<aside>`, `<header>`, `<main>`, `<footer>`; nav is `<nav aria-label="Sections">`.
+- The alert banner is `role="status" aria-live="polite"`.
+- The replay dropdown is a `button[aria-haspopup=listbox][aria-expanded]` over a
+  `ul[role=listbox]` of `li[role=option][aria-selected]`, operable with Enter,
+  Space and Escape, and closes on outside click.
+- Visible 2px `brand` focus ring on every interactive element.
+- Skip-to-content link as the first focusable element.
 
 ---
 
-## 8. Prompts for generating mockup images
+## 9. Prompts for generating mockup images
 
-The page is tall; generate it in pieces and stitch, or generate the hero region
-alone for the deck. **Prefix every prompt with this shared style block.**
+Generate per-screen and stitch, or generate the Dashboard alone for the deck.
+**Prefix every prompt with this shared style block.**
 
 **Shared style block:**
 
-> Dark UI dashboard screenshot, very dark navy background #0a0f1a, card surfaces
-> #111827 with 1px #1f2937 borders and 16px rounded corners, cyan #38bdf8 accent,
-> clean system sans-serif, tabular numbers, generous whitespace, flat design with
-> no gradients or glass effects, crisp and data-dense like a professional
-> monitoring instrument panel, 1440px wide desktop viewport, straight-on view, no
-> perspective, no device frame, no drop shadow around the page.
+> Light-mode SaaS dashboard screenshot, very light grey page background #f4f5f6,
+> pure white cards with 1px #e5e7eb borders and 14px rounded corners and a very
+> subtle shadow, dark green #15803d accent, near-black #1f2937 text, clean system
+> sans-serif, tabular numbers, generous whitespace, flat design with no gradients
+> or glass effects, crisp and data-dense like a professional monitoring
+> instrument panel, 1440px desktop viewport, straight-on view, no perspective, no
+> device frame. A 250px white left sidebar with a green leaf logo and the
+> wordmark "AirSense", a vertical nav list, and the active item highlighted in
+> pale green with a green left bar.
 
-**Prompt A — hero region (best single image for the deck):**
+**Prompt A — Dashboard (best single image for the deck):**
 
-> [style block] A web dashboard header reading "AirSense" with a small cyan
-> rounded-square logo containing an upward line-chart glyph, tagline "Forecasting
-> the pollution peak before it arrives.", and a pill badge "Live demo · MAIT,
-> Delhi" at the right. Below it a thin info strip: "Historical dataset replay —
-> not a live sensor feed." Below that a large card with a 4px amber left border
-> containing the label "CURRENT READING", an enormous amber number "163.0" with
-> smaller grey "ppb" beside it, an amber pill labelled "Moderate", and the line
-> "Dataset time · 23 Jun 2004, 12:00". On the right of that card a 2×3 grid of
-> small dark tiles: NO₂ 106.0 ppb, CO 2.2 mg/m³, BENZENE 13.1 µg/m³, TEMP 34.9 °C,
-> HUMIDITY 20.5 %, HOUR 12:00. Across the card bottom, separated by a hairline
-> rule: "RECOMMENDED ACTION NOW" above "Prefer indoor activity for sensitive
-> individuals. Monitor."
+> [style block] The main area shows a topbar reading "Dashboard" with the
+> subtitle "Current air quality and the next six hours", a pale green info strip
+> reading "Historical dataset replay — not a live sensor feed.", then a large
+> white card with a 5px amber left border containing "CURRENT READING", an
+> enormous near-black number "163.0" with grey "ppb", an amber pill labelled
+> "Moderate", and "Dataset time · 23 Jun 2004, 12:00"; to its right a 3×2 grid of
+> pale tiles: NO₂ 106.0 ppb, CO 2.2 mg/m³, BENZENE 13.1 µg/m³, TEMP 34.9 °C,
+> HUMIDITY 20.5 %, HOUR 12:00; across the card bottom "RECOMMENDED ACTION NOW"
+> above bold "Prefer indoor activity for sensitive individuals. Monitor."
 
-**Prompt B — forecast strip with the alert (the product thesis):**
+**Prompt B — Forecast strip with the alert (the product thesis):**
 
-> [style block] A dashboard section headed "6-hour forecast". A prominent full
-> width alert banner with a translucent orange background and a 1.5px orange
-> border, an orange warning triangle, bold white text "Peak predicted in 2 hours
-> — act now.", smaller grey text "Forecast reaches 239.7 ppb (High) at 08:00.
-> Increase ventilation/filtration indoors.", and a small dark chip at the right
-> reading "6H PEAK" above orange "256.0 ppb". Below it a row of six equal narrow
-> cards, each with a 4px coloured bar across the top, showing in order: t+1 07:00
-> "184.0 ppb" amber "Moderate" footnote "measured inputs"; t+2 08:00 "239.7 ppb"
-> orange "High"; t+3 09:00 "256.0 ppb" orange "High"; t+4 10:00 "239.9 ppb" orange
-> "High"; t+5 11:00 "234.7 ppb" orange "High"; t+6 12:00 "235.0 ppb" orange
-> "High"; the last five footnoted "model-fed inputs".
+> [style block] A section headed "6-hour forecast" with a full-width pale orange
+> alert banner: a solid orange circle containing a white warning triangle, bold
+> near-black text "Peak predicted in 2 hours — act now.", grey subtext "Forecast
+> reaches 239.7 ppb (High) at 08:00. Increase ventilation/filtration indoors.",
+> and a white chip at the right reading "6H PEAK" above "256.0 ppb". Below, six
+> equal white cards each with a coloured top bar: t+1 07:00 "184.0 ppb" amber
+> "Moderate" footnote "measured inputs"; then t+2 08:00 "239.7 ppb", t+3 09:00
+> "256.0 ppb", t+4 10:00 "239.9 ppb", t+5 11:00 "234.7 ppb", t+6 12:00 "235.0
+> ppb", all orange "High" and footnoted "model-fed inputs".
 
-**Prompt C — validation card:**
+**Prompt C — Model Performance:**
 
-> [style block] A dashboard card with a cyan border headed "Model validation" with
-> a small green pill reading "Beats baseline" at the right. Inside, four metric
-> tiles in a row: "TEST MAE 25.92 ppb / our model", "BASELINE MAE 34.94 ppb /
-> persistence", "IMPROVEMENT 25.8 % / lower error vs baseline" with the number in
-> green, "R² 0.801 / on held-out test set". Below them two horizontal comparison
-> bars on a shared scale: a shorter cyan bar labelled "AirSense 25.92 ppb" and a
-> longer grey bar labelled "Persistence 34.94 ppb", captioned "Mean absolute error
-> — lower is better." Below a hairline rule, small grey lines reading
-> "Chronological train/test split — no future data leaked into training." and
-> "Train: 1580 rows · Test: 396 rows".
+> [style block] A white card with a green border headed "Model validation" with a
+> pale green pill "✓ Beats baseline". Four pale metric tiles: "TEST MAE 25.92
+> ppb / our model", "BASELINE MAE 34.94 ppb / persistence", "IMPROVEMENT 25.8 % /
+> lower error vs baseline" with the number in green, "R² 0.801 / on held-out test
+> set". Below, two horizontal comparison bars on a shared scale: a shorter green
+> bar "AirSense 25.92 ppb" and a longer grey bar "Persistence 34.94 ppb". Beneath,
+> a second card headed "Backtest — predicted vs actual" showing a long line chart
+> where a grey "Actual" line and a green "Predicted" line track each other
+> closely across faint horizontal green, yellow and orange bands, and a pale green
+> callout reading "EARLY WARNING · 1 HOUR AHEAD" above "Of the 72 hours that
+> actually exceeded 200 ppb, the model flagged 52 an hour in advance".
 
-**Prompt D — charts region:**
+**Prompt D — Data Explorer:**
 
-> [style block] Two stacked dashboard chart cards. The upper card headed "Recent
-> history and forecast" contains a line chart on a dark grid: a solid cyan line
-> across the left two-thirds, continuing as a dashed cyan line on the right third,
-> joined at a single bright point marked by a vertical dashed grey divider
-> labelled "now"; faint horizontal colour zones green at the bottom, amber in the
-> middle, orange above, each labelled at the right edge; y-axis "NOx (ppb)",
-> x-axis "Time (hourly)"; legend "Measured (last 48 h)" solid and "Forecast (next
-> 6 h)" dashed. The lower card headed "Daily pollution cycle" contains a bar chart
-> of 24 bars rising from very low at hours 3–5 to tall bars at hours 8–9 and again
-> at 18–20, bars coloured green when short and amber to orange when tall, the
-> 18–21 group outlined in orange under a bracket labelled "6–9 PM traffic window",
-> y-axis "Mean NOx (ppb)", x-axis "Hour of day (0–23)", captioned "Evening peak
+> [style block] A card headed "Daily pollution cycle" containing a bar chart of 24
+> bars with the value printed above each bar, rising from very low green bars at
+> hours 3–5 to tall orange bars at hours 8–9 and again at 18–20, with the 18–21
+> group outlined in orange beneath an orange bracket labelled "6–9 PM traffic
+> window", faint horizontal green/yellow/orange risk bands behind, y-axis "Mean
+> NOx (ppb)", x-axis "Hour of day (0–23)", and the bold caption "Evening peak
 > averages 3.3x overnight levels (175.1 ppb vs 53.3 ppb)."
 
-**Prompt E — zones section:**
+**Prompt E — Campus Zones:**
 
-> [style block] A dashboard section headed "Campus zones" with an amber warning
-> pill reading "⚠ Simulated" at the right, and directly below a translucent amber
-> disclosure strip reading "simulated zone offset — single sensor stream." with
-> smaller grey text "We have one sensor, not four. Each zone applies a fixed
-> documented multiplier to the one real measured value (163.0 ppb)." Below, four
-> equal cards each with a coloured left border: "Main Gate 203.8 ppb High ×1.25",
-> "Parking Block 187.4 ppb Moderate ×1.15", "Central Lawn 146.7 ppb Moderate
-> ×0.90", "Library Block 130.4 ppb Moderate ×0.80", each with a tiny amber
-> "simulated" tag and one line of small grey rationale text.
+> [style block] A section headed "Campus zones" with an amber pill "⚠ Simulated"
+> at the right and a pale amber disclosure strip reading "simulated zone offset —
+> single sensor stream." with grey subtext "We have one sensor, not four." Below,
+> four white cards each with a coloured left border: "Main Gate 203.8 ppb" with an
+> orange "High" pill and "×1.25" chip; "Parking Block 187.4 ppb" Moderate ×1.15;
+> "Central Lawn 146.7 ppb" Moderate ×0.90; "Library Block 130.4 ppb" Moderate
+> ×0.80 — each with one line of grey rationale and a small amber "simulated" tag.
 
 **Negative prompt for all of the above:**
 
-> light mode, white background, glassmorphism, gradient mesh, neon glow, 3D,
+> dark mode, black background, glassmorphism, gradient mesh, neon glow, 3D,
 > isometric, device mockup, phone frame, browser chrome, lorem ipsum, placeholder
-> text, stock photography, human faces, illegible text, watermark, sidebar,
-> hamburger menu, login form, avatar.
+> text, stock photography, human faces, illegible text, watermark, hamburger menu
+> on desktop, login form, avatar, shopping cart.
 
 ---
 
-## 9. Hard rules
+## 10. Hard rules
 
 1. **Every number has a unit.**
-2. **Every number comes from the API.** Nothing is hardcoded in the HTML —
-   including the risk thresholds, the 3.3x ratio, and the band colours.
-3. **Anything simulated says "simulated" on screen**, in the section header and on
-   each individual card.
-4. **No lorem ipsum, no placeholder images, no stock photos, no fake logos.**
-5. **Never call the risk bands official.** The phrase "project-defined" appears
-   next to them.
-6. **Never write a bare time** where it could be read as the present moment —
-   prefix `Dataset time`.
-7. **No section renders blank.** Loading skeleton, then content or an error with
-   Retry.
-8. **Must be legible on a 360px-wide phone.**
+2. **Every number comes from the API** — including risk thresholds, band colours,
+   the 3.3× ratio, and the cleaning counts. Nothing is hardcoded in the HTML.
+3. **Anything simulated says "simulated" on screen**, in the section header *and*
+   on each individual card.
+4. **No lorem ipsum, no placeholder images, no stock photos, no dead links.**
+5. **Never call the risk bands official.** "Project-defined" appears beside them.
+6. **Never write a bare time** where it could read as the present moment — prefix
+   `Dataset time`.
+7. **Never imply a live feed or a physical sensor** — no wall-clock timestamps,
+   no GPS coordinates.
+8. **No region renders blank** — skeleton, then content or an error with Retry.
+9. **Legible on a 360px-wide phone**, with no horizontal page scroll.
